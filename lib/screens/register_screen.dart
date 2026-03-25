@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:manage_hours/screens/register_screen.dart';
 
-class LoginScreen extends StatelessWidget {
-  LoginScreen({super.key});
+class RegisterScreen extends StatelessWidget {
+  RegisterScreen({super.key});
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _nameController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,11 +23,18 @@ class LoginScreen extends StatelessWidget {
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
                     FlutterLogo(size: 76),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        hintText: 'Insira o nome',
+                      ),
+                    ),
                     SizedBox(height: 16),
                     TextField(
                       controller: _emailController,
@@ -42,34 +51,33 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {},
-                      child: Text(  
-                        'Entrar',
-                        style: TextStyle(fontSize: 18),
+                    TextField(
+                      obscureText: true,
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        hintText: 'Confirme a senha',
                       ),
                     ),
                     SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {},
-                      child: Text(  
-                        'Entrar com Google',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    TextButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => RegisterScreen()),
-                        );
+                        if(_passwordController.text == _confirmPasswordController.text) {
+                          // Lógica de registro
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('As senhas não coincidem')),
+                          );
+                        }
                       }, 
-                      child: Text('Ainda não tem uma conta? Cadastre-se aqui'),
-                    )
+                      child: Text(  
+                        'Cadastrar',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    SizedBox(height: 16),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
