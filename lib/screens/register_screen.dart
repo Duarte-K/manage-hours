@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manage_hours/services/auth_service.dart';
 
 class RegisterScreen extends StatelessWidget {
   RegisterScreen({super.key});
@@ -7,6 +8,7 @@ class RegisterScreen extends StatelessWidget {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
+  AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +65,28 @@ class RegisterScreen extends StatelessWidget {
                       onPressed: () {
                         if(_passwordController.text == _confirmPasswordController.text) {
                           // Lógica de registro
+                          _authService.register(
+                            email: _emailController.text,
+                            password: _passwordController.text,
+                            name: _nameController.text,
+                            context: context,
+                          ).then((result) {
+                            if (result == null) {
+                              // Registro bem-sucedido, redirecionar para a tela de login
+                              if(!context.mounted) return;
+                              Navigator.pop(context);
+                            } else {
+                              // Exibir mensagem de erro
+                              if(!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(result), backgroundColor: Colors.red),
+                              );
+                            }
+                          });
+
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('As senhas não coincidem')),
+                            SnackBar(content: Text('As senhas não coincidem'), backgroundColor: Colors.red),
                           );
                         }
                       }, 
