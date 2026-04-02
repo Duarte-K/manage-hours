@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    refresh();
   }
 
   @override
@@ -66,7 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: [
                         ListTile(
-                          onTap: () {},
+                          onTap: () {
+                            showFormModal(model: model);
+                          },
                           leading: Icon(Icons.list_alt_rounded, size: 56),
                           title: Text(
                             'Data: ${model.date} hora: ${HourHelpers.minutesToHours(model.minutes)}',
@@ -201,7 +204,19 @@ class _HomeScreenState extends State<HomeScreen> {
     refresh();
   }
 
-  void refresh() {}
+  void refresh() async {
+    // double total = 0;
+    List<Hour> temp = [];
+    QuerySnapshot<Map<String, dynamic>> snapshot = await db.collection(widget.user.uid).get();
+    for (var doc in snapshot.docs) {
+      temp.add(Hour.fromMap(doc.data()));
+      // total += hour.minutes;
+    }
+
+    setState(() {
+      listHours = temp;
+    });
+  }
 }
 
 

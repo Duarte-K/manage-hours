@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:manage_hours/screens/register_screen.dart';
+import 'package:manage_hours/services/auth_service.dart';
 
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +45,23 @@ class LoginScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _authService.login(
+                          email: _emailController.text, 
+                          password: _passwordController.text,
+                          context: context
+                        ).then((String? error ) {
+                          if(error != null){
+                            if(!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(error), 
+                                backgroundColor: Colors.red,
+                              )
+                            );
+                          }
+                        });
+                      },
                       child: Text(  
                         'Entrar',
                         style: TextStyle(fontSize: 18),

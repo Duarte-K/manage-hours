@@ -7,6 +7,7 @@ class AuthService {
   Future<String?> login({
     required String email,
     required String password,
+    required BuildContext context,
   }) async {
     try {
       await _firebaseAuth.signInWithEmailAndPassword(
@@ -19,6 +20,8 @@ class AuthService {
           return 'Usuário não encontrado. Verifique o email e tente novamente.';
         case 'wrong-password':
           return 'Senha incorreta. Tente novamente.';
+        case 'invalid-credential':
+          return 'Credenciais inválidas. Verifique e tente novamente.';
       }
       return e.code;
     } catch (e) {
