@@ -1,10 +1,13 @@
-// ignore_for_file: prefer_const_constructors_in_immutables
+// ignore_for_file: prefer_const_constructors_in_immutables, strict_top_level_inference
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:manage_hours/components/menu.dart';
+import 'package:manage_hours/helpers/hour_helpers.dart';
 import 'package:manage_hours/models/hour.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:uuid/uuid.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -29,7 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: Menu(user: widget.user),
       appBar: AppBar(title: Text('Manage Hours')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          showFormModal();
+        },
         child: Icon(Icons.add),
       ),
       body: (listHours.isEmpty)
@@ -64,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () {},
                           leading: Icon(Icons.list_alt_rounded, size: 56),
                           title: Text(
-                            'Data: ${model.date} hora: ${model.minutes}',
+                            'Data: ${model.date} hora: ${HourHelpers.minutesToHours(model.minutes)}',
                           ),
                           subtitle: Text(model.description!),
                         ),
@@ -77,7 +82,126 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void remove(Hour hour) {}
+  showFormModal({Hour? model}) {
+    String title = "Adicionar";
+    String confirmButton = "Salvar";
+    String cancelButton = "Cancelar";
+
+    TextEditingController dateController = TextEditingController();
+    final dataMaskFormatter = MaskTextInputFormatter(mask: '##/##/####');
+
+    TextEditingController minutesController = TextEditingController();
+    final minutesMaskFormatter = MaskTextInputFormatter(mask: '##:##');
+
+    TextEditingController descriptionController = TextEditingController();
+
+    if(model != null){
+      title = "Editando";
+      dateController.text = model.date;
+      minutesController.text = HourHelpers.minutesToHours(model.minutes);
+      if(model.description != null){
+        descriptionController.text = model.description!;
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height,
+          padding: EdgeInsets.all(32),
+          child: ListView(
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              TextFormField(
+                controller: dateController,
+                inputFormatters: [dataMaskFormatter],
+                keyboardType: TextInputType.datetime,
+                decoration: InputDecoration(
+                  hintText: '01/01/2024',
+                  labelText: 'Data',
+                ),
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: minutesController,
+                inputFormatters: [minutesMaskFormatter],
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: '00:00',
+                  labelText: 'Horas trabalhadas',
+                ),
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: descriptionController,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  hintText: 'O que foi feito?',
+                  labelText: 'Descrição',
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(cancelButton),
+                  ),
+                  SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Hour hour = Hour(
+                        id: Uuid().v1(),
+                        date: dateController.text,
+                        minutes: HourHelpers.hoursToMinutes(minutesController.text),
+                        description: descriptionController.text,
+                      );
+
+                      if(descriptionController.text != ''){
+                        hour.description = descriptionController.text;
+                      }
+                      if(model != null){
+                        hour.id = model.id;
+                      }
+
+                      db
+                        .collection(widget.user.uid)
+                        .doc(hour.id)
+                        .set(hour.toMap());
+
+                      refresh();
+
+                      Navigator.pop(context);
+                    }, 
+                    child: Text(confirmButton),
+                  )
+                ],
+              ),
+              SizedBox(height: 180),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  void remove(Hour hour) {
+    db.collection(widget.user.uid).doc(hour.id).delete();
+    
+    refresh();
+  }
+
+  void refresh() {}
 }
 
 
