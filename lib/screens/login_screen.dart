@@ -1,4 +1,9 @@
+// ignore_for_file: await_only_futures
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:manage_hours/modals/reset_password.dart';
 import 'package:manage_hours/screens/register_screen.dart';
 import 'package:manage_hours/services/auth_service.dart';
 
@@ -69,7 +74,9 @@ class LoginScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        signinWithGoogle();
+                      },
                       child: Text(  
                         'Entrar com Google',
                         style: TextStyle(fontSize: 18),
@@ -84,6 +91,17 @@ class LoginScreen extends StatelessWidget {
                         );
                       }, 
                       child: Text('Ainda não tem uma conta? Cadastre-se aqui'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context, 
+                          builder: (BuildContext context) {
+                            return ResetPasswordModal();
+                          }
+                        );
+                      }, 
+                      child: Text('Esqueceu sua senha? Recupere aqui'),
                     )
                   ],
                 ),
@@ -93,5 +111,17 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+  
+   Future<UserCredential>signinWithGoogle() async{
+
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    return await FirebaseAuth.instance.signInWithCredential(credential);
   }
 }
