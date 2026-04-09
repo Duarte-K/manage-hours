@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:manage_hours/modals/delete_account.dart';
 import 'package:manage_hours/services/auth_service.dart';
 
 class Menu extends StatelessWidget {
@@ -28,6 +29,17 @@ class Menu extends StatelessWidget {
             title: Text('Sair'),
             onTap: () {
               AuthService().logout();
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.assignment_ind_rounded),
+            title: Text('Excluir conta'),
+            onTap: () {
+              showDialog(
+                context: context, builder: (context) {
+                  return DeleteAccountModal();
+                }
+              );
             },
           ),
         ],

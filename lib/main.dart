@@ -1,7 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:manage_hours/screens/home_screen.dart';
-import 'package:manage_hours/screens/login_screen.dart';
+// ignore_for_file: avoid_print
+
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart' hide Route;
+import 'package:manage_hours/routes/router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -10,6 +11,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MyApp());
 }
@@ -26,29 +29,14 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: Router(),
+      home: Route(),
     );
   }
 }
 
-class Router extends StatelessWidget {
-  const Router({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: FirebaseAuth.instance.userChanges(), 
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else {
-          if(snapshot.hasData){
-            return HomeScreen(user: snapshot.data!);
-          } else {
-            return LoginScreen();
-          }
-        }
-      }
-    );
-  }
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  
+  print('Handling a background message: ${message.messageId}');
 }

@@ -1,7 +1,8 @@
-// ignore_for_file: prefer_const_constructors_in_immutables, strict_top_level_inference
+// ignore_for_file: prefer_const_constructors_in_immutables, strict_top_level_inference, avoid_print
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:manage_hours/components/menu.dart';
 import 'package:manage_hours/helpers/hour_helpers.dart';
@@ -11,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
+  String title = 'Manage Hours';
   HomeScreen({super.key, required this.user});
 
   @override
@@ -24,6 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
+    setupFCM();
     refresh();
   }
 
@@ -31,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Menu(user: widget.user),
-      appBar: AppBar(title: Text('Manage Hours')),
+      appBar: AppBar(title: Text(widget.title)),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showFormModal();
@@ -205,18 +209,58 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void refresh() async {
-    // double total = 0;
+    double total = 0;
     List<Hour> temp = [];
     QuerySnapshot<Map<String, dynamic>> snapshot = await db.collection(widget.user.uid).get();
     for (var doc in snapshot.docs) {
       temp.add(Hour.fromMap(doc.data()));
-      // total += hour.minutes;
+      total += doc.data()['minutes'];
     }
+
+    double minutes = total % 60;
+    Duration duration = Duration(minutes: total.toInt());
 
     setState(() {
       listHours = temp;
+      widget.title = 'Manage Hours - Total: ${duration.inHours}:${minutes.toInt().toString().padLeft(2, '0')}';
     });
   }
 }
+
+void setupFCM() async{
+  final fcmToken = await FirebaseMessaging.instance.getToken();
+  print('FCM Token: $fcmToken');
+
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    sound: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+  );
+
+  if(settings.authorizationStatus == AuthorizationStatus.authorized){
+    print('User granted permission: ${settings.authorizationStatus}');
+  }else if(settings.authorizationStatus == AuthorizationStatus.provisional){
+    print('User granted provisional permission: ${settings.authorizationStatus}');
+  } else {
+    print('User declined or has not accepted permission');
+  }
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print('Received a message while in the foreground!');
+    print('Message data: ${message.data}');
+
+    if (message.notification != null) {
+      print('Message also contained a notification: ${message.notification}');
+    }
+  });
+
+}
+
 
 
